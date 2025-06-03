@@ -1,13 +1,16 @@
 "use client";
+import { useRouter } from "next/navigation";
+
 
 import React, { useState, useEffect } from "react";
 import { useFillerWordDetection, useConversationPractice } from "@/lib/speech";
 import { Mic, MicOff, Redo, Send, MessageSquare, BarChart } from "lucide-react";
 
 export default function PublicSpeakingApp() {
+  const router = useRouter();
   const [showStats, setShowStats] = useState(false);
   const [isCombinedActive, setIsCombinedActive] = useState(false);
-  
+
   // Initialize filler word detection with forceActive prop
   const {
     displayLabels,
@@ -19,7 +22,7 @@ export default function PublicSpeakingApp() {
     startFillerDetection,
     stopFillerDetection
   } = useFillerWordDetection(isCombinedActive);
-  
+
   // Initialize conversation practice with callbacks
   const {
     messages,
@@ -40,6 +43,7 @@ export default function PublicSpeakingApp() {
       }
     },
     // onSpeechEnd callback
+
     () => {
       if (isCombinedActive) {
         setIsCombinedActive(false);
@@ -78,12 +82,12 @@ export default function PublicSpeakingApp() {
   return (
     <div className="flex flex-col items-center justify-center px-4 py-8 bg-white max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-8 text-center">Public Speaking Assistant</h1>
-      
+
       <div className="w-full flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Latihan Wawancara Pekerjaan</h2>
           <div className="flex items-center space-x-4">
-            <button 
+            <button
               className="text-blue-600 hover:text-blue-500 flex items-center gap-1"
               onClick={() => setShowStats(!showStats)}
             >
@@ -98,16 +102,16 @@ export default function PublicSpeakingApp() {
 
         <div className="flex items-center mb-6">
           <div className="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
-            <div 
-              className="bg-blue-600 h-full" 
+            <div
+              className="bg-blue-600 h-full"
               style={{ width: `${getProgressPercentage()}%` }}
             ></div>
           </div>
           <span className="text-sm font-medium ml-4">{getProgressPercentage()}%</span>
         </div>
 
-        <div 
-          ref={chatContainerRef} 
+        <div
+          ref={chatContainerRef}
           className="border border-gray-200 rounded-lg p-6 mb-4 h-[400px] overflow-y-auto flex flex-col"
         >
           {messages.map((msg, index) => (
@@ -117,12 +121,11 @@ export default function PublicSpeakingApp() {
                   <MessageSquare className="w-6 h-6 text-white" />
                 </div>
               )}
-              <div 
-                className={`${
-                  msg.sender === "user" 
-                    ? "bg-orange-100 text-right ml-auto" 
-                    : "bg-gray-100"
-                } p-4 rounded-lg max-w-[80%]`}
+              <div
+                className={`${msg.sender === "user"
+                  ? "bg-orange-100 text-right ml-auto"
+                  : "bg-gray-100"
+                  } p-4 rounded-lg max-w-[80%]`}
               >
                 <p>{msg.text}</p>
               </div>
@@ -144,7 +147,7 @@ export default function PublicSpeakingApp() {
                 <p>Total filler words: <span className="font-medium">{getTotalFillerWords()}</span></p>
                 <p>Filler words per minute: <span className="font-medium">{getFillerWordsPerMinute().toFixed(1)}</span></p>
               </div>
-              
+
               <div className="flex gap-1">
                 {Object.entries(counts).slice(0, 3).map(([label, count]) => (
                   count > 0 && (
@@ -155,7 +158,7 @@ export default function PublicSpeakingApp() {
                 ))}
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-2">
               {displayLabels.map((label) => (
                 <div
@@ -174,7 +177,7 @@ export default function PublicSpeakingApp() {
 
         <div className="relative">
           <div className="flex items-center border border-gray-200 rounded-lg">
-            <button 
+            <button
               className={`p-3 text-white ${isCombinedActive ? "bg-red-500" : "bg-green-500"} rounded-l-lg hover:opacity-90 transition-opacity`}
               onClick={toggleListening}
             >
@@ -184,7 +187,7 @@ export default function PublicSpeakingApp() {
                 <Mic className="w-6 h-6" />
               )}
             </button>
-            <input 
+            <input
               type="text"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
@@ -192,7 +195,7 @@ export default function PublicSpeakingApp() {
               placeholder="Respon Anda atau tekan mikrofon untuk berbicara..."
               className="flex-1 p-3 focus:outline-none"
             />
-            <button 
+            <button
               className="p-3 text-gray-500 hover:text-gray-700"
               onClick={handleSendMessage}
             >
@@ -208,6 +211,18 @@ export default function PublicSpeakingApp() {
               </p>
             </div>
           )}
+
+          {getProgressPercentage() === 100 && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={() => router.push("/result")}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                End Session & View Results
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
     </div>
