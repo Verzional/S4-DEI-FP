@@ -210,12 +210,6 @@ export default function ResultPage() {
             Pilih Skenario Lain
           </button>
         </Link>
-        <Link href="/start">
-          <button className="w-full sm:w-auto bg-gray-200 text-gray-700 font-semibold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg">
-            <Home className="w-5 h-5 mr-2" />
-            Kembali ke Beranda
-          </button>
-        </Link>
       </div>
     </div>
   );

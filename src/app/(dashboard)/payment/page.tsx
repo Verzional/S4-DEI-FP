@@ -91,8 +91,8 @@ export default function Payment() {
       // Redirect after successful payment (after showing success message)
       setTimeout(() => {
         router.push("/scenarios");
-      }, 3000);
-    }, 2000);
+      }, 2000); // Redirect after 2 seconds to show success message
+    }, 3000); // Simulate 3 seconds processing time
   };
 
   return (
