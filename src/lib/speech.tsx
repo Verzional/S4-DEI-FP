@@ -38,6 +38,16 @@ interface SpeechCommands {
   ): SpeechRecognizer;
 }
 
+// Define a more specific interface for storing sessions
+interface StoredSessionData {
+  id: string;
+  timestamp: string;
+  duration: number;
+  fillerCounts: Record<string, number>;
+  totalFillerWords: number;
+  fillerWordPercentage: string;
+}
+
 declare global {
   interface Window {
     speechCommands: SpeechCommands;
@@ -51,6 +61,7 @@ declare global {
 }
 
 const MODEL_URL = "https://teachablemachine.withgoogle.com/models/T4W8Efm6G/";
+const ALL_SESSIONS_KEY = "allAudiciaSessions"; // Key for storing all sessions
 
 export const useFillerWordDetection = (forceActive?: boolean) => {
   const [allLabels, setAllLabels] = useState<string[]>([]);
@@ -141,6 +152,9 @@ export const useFillerWordDetection = (forceActive?: boolean) => {
     const recognizer = recognizerRef.current;
     if (!recognizer) return;
 
+    // Reset counters for a new session
+    setCounts({});
+    setSessionTime(0);
     setStartTime(Date.now());
     setIsFillerDetectionActive(true);
 
@@ -185,22 +199,46 @@ export const useFillerWordDetection = (forceActive?: boolean) => {
 
     setIsFillerDetectionActive(false);
 
-    const end = Date.now();
-    const durationSec = startTime ? Math.floor((end - startTime) / 1000) : 0;
-    const totalFillerWords = Object.values(counts).reduce((a, b) => a + b, 0);
-    const fillerWordPercentage =
-      durationSec > 0
-        ? ((totalFillerWords / durationSec) * 100).toFixed(2)
-        : "0.00";
+    // Only save data if there was a session
+    if (startTime) {
+      const end = Date.now();
+      const durationSec = Math.floor((end - startTime) / 1000);
+      const totalFillerWords = Object.values(counts).reduce((a, b) => a + b, 0);
+      const fillerWordPercentage =
+        durationSec > 0
+          ? ((totalFillerWords / durationSec) * 100).toFixed(2)
+          : "0.00";
 
-    const sessionData = {
-      duration: durationSec,
-      fillerCounts: counts,
-      totalFillerWords,
-      fillerWordPercentage,
-    };
+      // Create new session data object
+      const newSessionData: StoredSessionData = {
+        id: Date.now().toString(), // Use timestamp as unique ID
+        timestamp: new Date().toISOString(),
+        duration: durationSec,
+        fillerCounts: { ...counts },
+        totalFillerWords,
+        fillerWordPercentage,
+      };
 
-    localStorage.setItem("lastSession", JSON.stringify(sessionData));
+      // Save current session for the result page
+      localStorage.setItem("lastSession", JSON.stringify(newSessionData));
+
+      // Save to all sessions history
+      try {
+        // Get existing sessions or initialize empty array
+        const existingSessionsStr = localStorage.getItem(ALL_SESSIONS_KEY);
+        const existingSessions: StoredSessionData[] = existingSessionsStr 
+          ? JSON.parse(existingSessionsStr) 
+          : [];
+        
+        // Add new session to the array
+        existingSessions.push(newSessionData);
+        
+        // Save back to localStorage
+        localStorage.setItem(ALL_SESSIONS_KEY, JSON.stringify(existingSessions));
+      } catch (error) {
+        console.error("Failed to save session history:", error);
+      }
+    }
   }, [counts, startTime]);
 
   const resetFillerStats = useCallback(() => {
